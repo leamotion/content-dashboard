@@ -18,10 +18,11 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), 'setup.env.txt'))
 
-INSTAGRAM_TOKEN    = os.environ['INSTAGRAM_ACCESS_TOKEN']
-YOUTUBE_API_KEY    = os.environ['YOUTUBE_API_KEY']
-YOUTUBE_CHANNEL_ID = os.environ['YOUTUBE_CHANNEL_ID']
-DATABASE_URL       = os.environ['DATABASE_URL']
+INSTAGRAM_TOKEN      = os.environ['INSTAGRAM_ACCESS_TOKEN']
+INSTAGRAM_ACCOUNT_ID = os.environ.get('INSTAGRAM_BUSINESS_ACCOUNT_ID', '')
+YOUTUBE_API_KEY      = os.environ['YOUTUBE_API_KEY']
+YOUTUBE_CHANNEL_ID   = os.environ['YOUTUBE_CHANNEL_ID']
+DATABASE_URL         = os.environ['DATABASE_URL']
 
 IG_BASE = 'https://graph.facebook.com/v19.0'
 YT_BASE = 'https://www.googleapis.com/youtube/v3'
@@ -44,7 +45,13 @@ log = logging.getLogger(__name__)
 # ── Instagram ─────────────────────────────────────────────────────────────────
 
 def get_ig_account_id() -> str:
-    """Resolve the Instagram Business Account ID from the User Access Token."""
+    """Return the Instagram Business Account ID.
+    Uses INSTAGRAM_BUSINESS_ACCOUNT_ID env var if set (fastest),
+    otherwise discovers it via the page lookup."""
+    if INSTAGRAM_ACCOUNT_ID:
+        log.info('Using Instagram Business Account ID from env: %s', INSTAGRAM_ACCOUNT_ID)
+        return INSTAGRAM_ACCOUNT_ID
+
     resp = requests.get(f'{IG_BASE}/me/accounts', params={'access_token': INSTAGRAM_TOKEN}, timeout=15)
     resp.raise_for_status()
     pages = resp.json().get('data', [])
