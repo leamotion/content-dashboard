@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { getClient } from '@/lib/db';
 
-// Whitelist prevents SQL injection via the ORDER BY column
 const ALLOWED_SORTS: Record<string, string> = {
   views:           'views',
   likes:           'likes',
@@ -12,7 +11,7 @@ const ALLOWED_SORTS: Record<string, string> = {
 const ALLOWED_PLATFORMS = new Set(['all', 'instagram', 'youtube']);
 
 export async function GET(req: NextRequest) {
-  const range    = Math.min(
+  const range = Math.min(
     Math.max(Number(req.nextUrl.searchParams.get('range') ?? 30), 1),
     365,
   );
@@ -22,7 +21,7 @@ export async function GET(req: NextRequest) {
     ? (req.nextUrl.searchParams.get('platform') ?? 'all')
     : 'all';
 
-  const client = await pool.connect();
+  const client = await getClient();
   try {
     const res = await client.query(
       `SELECT
@@ -46,7 +45,11 @@ export async function GET(req: NextRequest) {
       [range, platform],
     );
     return NextResponse.json(res.rows);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[posts]', message);
+    return NextResponse.json({ error: message }, { status: 500 });
   } finally {
-    client.release();
+    await client.end();
   }
 }

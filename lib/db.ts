@@ -1,21 +1,14 @@
-import { Pool } from 'pg';
+import { Client } from 'pg';
 
-declare global {
-  // eslint-disable-next-line no-var
-  var pgPool: Pool | undefined;
-}
-
-const pool =
-  global.pgPool ??
-  new Pool({
+// Serverless-safe: fresh client per request.
+// Vercel functions are short-lived — a pool doesn't survive between invocations
+// and can exhaust Supabase's direct connection limit.
+export async function getClient(): Promise<Client> {
+  const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
-    max: 5,
+    connectionTimeoutMillis: 10_000,
   });
-
-// Reuse pool across hot-reloads in development
-if (process.env.NODE_ENV !== 'production') {
-  global.pgPool = pool;
+  await client.connect();
+  return client;
 }
-
-export default pool;
