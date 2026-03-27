@@ -1,0 +1,31 @@
+# ── Secrets & environment ─────────────────────────────────────────────────────
+.env
+.env.*
+*.env
+# setup.env.txt contains API tokens and DB credentials
+setup.env.txt
+
+# ── Node ──────────────────────────────────────────────────────────────────────
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+analytics_fetch.log
+*.log
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
