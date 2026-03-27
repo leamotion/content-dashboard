@@ -77,7 +77,7 @@ def fetch_instagram_posts() -> list[dict]:
     resp = requests.get(
         f'{IG_BASE}/{ig_id}/media',
         params={
-            'fields': 'id,caption,media_type,timestamp,thumbnail_url,media_url,permalink,like_count,comments_count',
+            'fields': 'id,caption,media_type,media_product_type,timestamp,thumbnail_url,media_url,permalink,like_count,comments_count',
             'limit': 25,
             'access_token': INSTAGRAM_TOKEN,
         },
@@ -90,11 +90,13 @@ def fetch_instagram_posts() -> list[dict]:
     records = []
     for media in media_list:
         media_id   = media['id']
-        media_type = media.get('media_type', 'IMAGE')
+        media_type         = media.get('media_type', 'IMAGE')
+        media_product_type = media.get('media_product_type', '')
 
-        # Insights metrics vary by media type
-        if media_type in ('VIDEO', 'REEL'):
-            insight_metrics = 'plays,reach,saved,shares'
+        # Insights metrics vary by media type.
+        # Meta API v22+ removed 'plays' for Reels — use total_interactions instead.
+        if media_product_type == 'REELS' or media_type == 'VIDEO':
+            insight_metrics = 'reach,saved,shares,total_interactions'
         else:
             insight_metrics = 'impressions,reach,saved,shares'
 
@@ -109,7 +111,7 @@ def fetch_instagram_posts() -> list[dict]:
                 val = item.get('values', [{}])[0].get('value', 0)
                 insights[item['name']] = int(val) if isinstance(val, (int, float)) else 0
 
-        views    = insights.get('plays', insights.get('impressions', 0))
+        views    = insights.get('reach', insights.get('impressions', 0))
         likes    = int(media.get('like_count', 0))
         comments = int(media.get('comments_count', 0))
         shares   = insights.get('shares', 0)

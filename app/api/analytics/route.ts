@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
 
     const sparklineRes = await client.query(
       `SELECT
-         DATE(published_at AT TIME ZONE 'UTC')                     AS day,
+         TO_CHAR(published_at AT TIME ZONE 'UTC', 'YYYY-MM-DD')    AS day,
          COALESCE(SUM(views),    0)::bigint                        AS views,
          COALESCE(SUM(reach),    0)::bigint                        AS reach,
          COALESCE(ROUND(AVG(engagement_rate)::numeric, 4), 0)      AS engagement_rate,
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
        FROM content_analytics
        WHERE published_at >= NOW() - make_interval(days => $1)
          AND ($2 = 'all' OR platform = $2)
-       GROUP BY DATE(published_at AT TIME ZONE 'UTC')
+       GROUP BY TO_CHAR(published_at AT TIME ZONE 'UTC', 'YYYY-MM-DD')
        ORDER BY day ASC`,
       [range, platform],
     );
